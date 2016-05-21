@@ -9,34 +9,30 @@ describe Match do
   end
 
   describe '#parse_guess' do
-    subject(:match) { Match.new(code_size).parse_guess(guess) }
+    subject(:match) { Match.new(code_size: code_size).parse_guess(guess) }
 
     let(:code_size) { 4 }
     let(:code) { [:R, :R, :G, :B]}
 
-    before { allow(Match.generate_code).to receive(code_size).and_return(code) }
+    before { allow(Match).to receive(:generate_code).with(code_size).and_return(code) }
 
+    let(:guess) { [:R, :R, :G, :B] }
     it "validates the correct guess" do 
-      guess = [:R, :R, :G, :B]
-
       is_expected.to eq( {exact: 4, near: 0} )
     end
 
+    let(:guess) { [:R, :R, :B, :Y] }
     it "shows near corrects" do 
-      guess = [:R, :R, :B, :Y]
-
       is_expected.to eq( {exact: 2, near: 1} )
     end
 
+    let(:guess) { [:Y, :G, :Y, :G] }
     it "doesn't duplicate nears" do 
-      guess = [:Y, :G, :Y, :G]
-
       is_expected.to eq( {exact: 0, near: 1} )
     end
 
+    let(:guess) { [:Y, :Y, :Y, :Y] }
     it "refuses wrong guesses" do 
-      guess = [:Y, :Y, :Y, :Y]
-
       is_expected.to eq( {exact: 0, near: 0} )
     end
 
