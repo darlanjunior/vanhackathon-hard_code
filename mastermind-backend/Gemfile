@@ -3,6 +3,7 @@ source 'https://rubygems.org'
 gem 'rails', '4.2.3'
 gem 'rails-api'
 gem 'redis'
+gem 'redis_orm'
 
 group :development, :test do 
   gem 'rspec-rails'
