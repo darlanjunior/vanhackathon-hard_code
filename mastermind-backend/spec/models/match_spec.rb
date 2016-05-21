@@ -2,7 +2,7 @@ describe Match do
   describe '#generate_code' do
     subject(:generate_code) { Match.generate_code code_size}
     
-    let(:code_size) { 4 }
+    let(:code_size) { Game.code_size }
     it 'generates a code with the appropriate size' do
       expect(subject.size).to eq(code_size) 
     end
@@ -11,6 +11,7 @@ describe Match do
   describe '#parse_guess' do
     subject(:match) { Match.new(code_size: code_size).parse_guess(guess) }
 
+    # testing with just 4 to simplify, as the algorithm is the same for any size
     let(:code_size) { 4 }
     let(:code) { [:R, :R, :G, :B]}
 
@@ -35,8 +36,6 @@ describe Match do
       let(:guess) { [:Y, :Y, :Y, :Y] }
       it { is_expected.to eq( {exact: 0, near: 0} ) }
     end
-
   end
-
 
 end

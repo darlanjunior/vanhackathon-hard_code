@@ -1,6 +1,6 @@
-require 'pry'
-class Match
-  attr_accessor :code_size, :code
+class Match < RedisOrm::Base
+  property :code_size, Integer
+  property :code, Array
   
   def initialize code_size: size
     self.code_size = code_size
@@ -12,16 +12,18 @@ class Match
   end
 
   def self.generate_code size
-    size.times.map { Match.colors.sample 1 }
+    size.times.map { Match.colors.sample }
   end
 
   def parse_guess guess
-    exact_near_map = map_code_to_guess guess
-
-    {exact: exact_near_map.count(:exact), near: exact_near_map.count(:near)}
+    reduce_guess_map(map_code_to_guess guess)
   end
 
   private
+  def reduce_guess_map exact_near_map
+    { exact: exact_near_map.count(:exact), near: exact_near_map.count(:near) }
+  end
+
   def map_code_to_guess guess 
     self.code.each_with_index.map do |code_color, code_index|
       index = guess.index code_color
