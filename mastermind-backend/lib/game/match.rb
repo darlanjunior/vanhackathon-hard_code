@@ -1,3 +1,4 @@
+require 'pry'
 class Match
   attr_accessor :code_size, :code
   
@@ -15,7 +16,25 @@ class Match
   end
 
   def parse_guess guess
-    { exact: 4, near: 0 }
+    exact_near_map = map_code_to_guess guess
+
+    {exact: exact_near_map.count(:exact), near: exact_near_map.count(:near)}
+  end
+
+  private
+  def map_code_to_guess guess 
+    self.code.each_with_index.map do |code_color, code_index|
+      index = guess.index code_color
+      case 
+      when index == code_index
+        guess[index] = nil
+        :exact
+      when index != nil
+        :near
+      else
+        :miss
+      end
+    end
   end
 
 end

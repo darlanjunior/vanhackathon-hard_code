@@ -16,24 +16,24 @@ describe Match do
 
     before { allow(Match).to receive(:generate_code).with(code_size).and_return(code) }
 
-    let(:guess) { [:R, :R, :G, :B] }
-    it "validates the correct guess" do 
-      is_expected.to eq( {exact: 4, near: 0} )
+    context 'when guess is correct' do
+      let(:guess) { [:R, :R, :G, :B] }
+      it { is_expected.to eq( {exact: 4, near: 0} ) }
     end
 
-    let(:guess) { [:R, :R, :B, :Y] }
-    it "shows near corrects" do 
-      is_expected.to eq( {exact: 2, near: 1} )
+    context 'when guess is off by one' do
+      let(:guess) { [:R, :R, :B, :G] }
+      it { is_expected.to eq( {exact: 2, near: 2} ) }
     end
 
-    let(:guess) { [:Y, :G, :Y, :G] }
-    it "doesn't duplicate nears" do 
-      is_expected.to eq( {exact: 0, near: 1} )
+    context 'when guess has two nears' do
+      let(:guess) { [:Y, :G, :Y, :G] }
+      it { is_expected.to eq( {exact: 0, near: 1} ) }
     end
 
-    let(:guess) { [:Y, :Y, :Y, :Y] }
-    it "refuses wrong guesses" do 
-      is_expected.to eq( {exact: 0, near: 0} )
+    context 'when guess is incorrect' do
+      let(:guess) { [:Y, :Y, :Y, :Y] }
+      it { is_expected.to eq( {exact: 0, near: 0} ) }
     end
 
   end
