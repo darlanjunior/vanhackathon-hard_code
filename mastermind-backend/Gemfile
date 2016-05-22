@@ -2,12 +2,12 @@ source 'https://rubygems.org'
 
 gem 'rails', '4.2.3'
 gem 'rails-api'
-gem 'redis'
-gem 'redis_orm'
+gem 'sqlite3'
 
 group :development, :test do 
   gem 'rspec-rails'
   gem 'factory_girl_rails', '~> 4.0'
+  gem 'database_cleaner'
   gem 'spring'
   gem 'pry'
 end

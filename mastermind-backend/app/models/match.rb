@@ -1,14 +1,32 @@
-class Match < RedisOrm::Base
-  property :code_size, Integer
-  property :code, Array
+class Match < ActiveRecord::Base
+  has_many :users
   
-  def initialize code_size: size
-    self.code_size = code_size
-    self.code = Match.generate_code code_size
+  after_initialize :set_code
+
+  def create name: name
+    self.users = [User.new({name: name})]
+
+    self.create
+  end
+
+  def code
+    @code ? @code.split('') : nil
+  end
+
+  def code= code
+    @code = code.join
+  end
+
+  def set_code
+    self.code ||= Match.generate_code(Match.code_size)
+  end
+
+  def self.code_size
+    8
   end
   
   def self.colors 
-    [:R,:B,:G,:Y,:O,:P,:C,:M]
+    ["R","B","G","Y","O","P","C","M"]
   end
 
   def self.generate_code size
@@ -26,12 +44,11 @@ class Match < RedisOrm::Base
 
   def map_code_to_guess guess 
     self.code.each_with_index.map do |code_color, code_index|
-      index = guess.index code_color
       case 
-      when index == code_index
-        guess[index] = nil
+      when guess[code_index] == code_color
+        guess[code_index] = nil
         :exact
-      when index != nil
+      when guess.index(code_color)
         :near
       else
         :miss
