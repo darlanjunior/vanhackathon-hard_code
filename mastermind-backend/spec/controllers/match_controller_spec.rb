@@ -69,11 +69,9 @@ RSpec.describe MatchController, type: :controller do
     before(:each) do
       @match = create(:match) do |match|
         create(:user, match: match)
-        create(:user2, match: match)
       end
 
       allow_any_instance_of(Match).to receive(:code).and_return(['R', 'R', 'R', 'R', 'R', 'R', 'R', 'R'])
-
 
       post :guess, { name: 'Toninho do Diabo', code: code, game_key: game_key }, format: :json
     end
@@ -122,15 +120,63 @@ RSpec.describe MatchController, type: :controller do
       end
 
       it do
-
         expect(response.status).to eq(200)
         is_expected.to match(correct_response)
       end
 
     end
 
-    context 'when playing a multiplayer game' do
+    describe 'multiplayer game' do
+      def code 
+        ['G', 'R', 'R', 'R', 'R', 'R', 'R', 'R']
+      end
+
+      before do
+        @match = create(:match2) do |match|
+          create(:user3, match: match)
+          create(:user2, match: match)
+        end
+
+        allow_any_instance_of(Match)
+            .to receive(:code)
+            .and_return(['R', 'R', 'R', 'R', 'R', 'R', 'R', 'R'])
+
+        post :guess, { name: attributes_for(:user2)[:name], code: code, game_key: game_key }, format: :json
+      end
+
+      context 'second player takes a guess' do 
+        before do 
+          post :guess, { name: attributes_for(:user3)[:name], code: code, game_key: game_key }, format: :json
+        end
+
+        let(:valid_response) { 
+          a_hash_including(:past_results)
+        }
+
+        it { is_expected.to match valid_response }
+      end
+
+      context 'first player tries to take a second guess' do 
+        before do 
+          post :guess, { name: attributes_for(:user2)[:name], code: code, game_key: game_key }, format: :json
+        end
+        
+        it { is_expected.to match(error: {code: 400, message: 'Wait for other users' }) } 
+      end
+
+      context 'second player wins' do 
+        before do 
+          post :guess, { name: attributes_for(:user3)[:name], code: code, game_key: game_key }, format: :json
+          post :guess, { name: attributes_for(:user2)[:name], code: code, game_key: game_key }, format: :json
+        end
+        
+        it { expect(response.status).to eq(404) }
+        it { is_expected.to match(error: {code: 404, message: a_string_including('Couldn\'t find Match')}) }
+      end
+
+      
     end
+
   end  
 
 end

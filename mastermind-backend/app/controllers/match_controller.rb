@@ -36,7 +36,27 @@ class MatchController < ApplicationController
     end
   end
 
+  def find_user_guess_count match, name
+    match
+      .users
+      .where(name: name)
+      .first
+      .guesses
+      .count
+  end
+
+  def guess_count_larger match, guess_count
+    match
+      .users
+      .any? {|user| guess_count > user.guesses.count}
+  end
+
   def guess
+    if guess_count_larger(@match, find_user_guess_count(@match, guess_params[:name]))
+      render json: {error: {code: 400, message: 'Wait for other users' }}, status: 400
+      return
+    end
+
     guess = Guess.new(colors: guess_params[:code], exact: 0, near: 0)
     guess.user = @match.users.where(name: guess_params[:name]).first
     parsed = @match.parse_guess(guess.colors)
@@ -62,6 +82,11 @@ class MatchController < ApplicationController
   private
   def set_match
     @match = Match.find(params[:game_key])
+
+    if @match.created_at < 5.minutes.ago
+      @match.destroy
+      raise ActiveRecord::RecordNotFound 'Match expired'
+    end
   end
 
   def guess_params
@@ -121,7 +146,6 @@ class MatchController < ApplicationController
       time_taken: time,
       result: "You win!",
       solved: true,
-      time_taken: 64.75358,
       user: name
     }
   end

@@ -6,4 +6,8 @@ FactoryGirl.define do
   factory :user2, class: User do
     name "João Maria"
   end
+
+  factory :user3, class: User do
+    name "João José"
+  end
 end
