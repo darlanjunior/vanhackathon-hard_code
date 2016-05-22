@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe GameController, type: :controller do
+RSpec.describe MatchController, type: :controller do
   render_views
 
   describe '#new_game' do
@@ -9,37 +9,32 @@ RSpec.describe GameController, type: :controller do
     end
 
     context 'when submitting a name' do
-      subject { JSON.parse(response.body) }
+      subject { json response }
 
       let(:name) { 'João das Neves' }
 
-      it 'creates a new game and returns the game key' do
-        expect(response.status).to eq(200)
-        
-        is_expected.to include('game_key')
-        is_expected.not_to include('errors')
-      end
+      it { expect(response.status).to eq(200) }
+      
+      it { is_expected.to include('game_key') }
+      it { is_expected.not_to include('error') }
     end
 
     context 'when name is not submitted' do
-      subject { JSON.parse(response.body) }
+      subject { json response }
 
       let(:name) { nil }
+      
+      it { expect(response.status).to eq(422) }
 
-      it { is_expected.to include('errors') }
+      it { is_expected.to match(error: {code: 422, message: a_string_including('Parameter missing')}) }
       it { is_expected.not_to include('game_key') }
-
-      it 'responds with an error code' do
-        expect(response.status).to eq(422)
-        expect(subject['errors']).to eq('A player name is required')
-      end
     end
 
     context 'when joining a game twice' do
-      subject { JSON.parse(response.body)['game_key'] }
+      subject { json(response)['game_key'] }
 
       let(:name) { 'Jean Niege' }
-      let!(:first_game_key) { JSON.parse(response.body)['game_key'] }
+      let!(:first_game_key) { json(response)['game_key'] }
 
       before do
         post :new_game, name: name, format: :json
@@ -72,26 +67,30 @@ RSpec.describe GameController, type: :controller do
       post :guess, code: code, game_key: game_key, format: :json
     end
 
+    subject(:json_response) { json response }
+
     context 'when guessing in an invalid game' do
-      subject { JSON.parse(response.body) }
-      
       let(:code) { ['a', 'b'] }
       let(:game_key) { 'sbrubles' }
 
       it { is_expected.to include(:errors) }
-      it { expect(subject['errors'].to eq('Invalid game key') }
+      it { expect(json_response).to eq(error_response) }
     end
 
     context 'when submitting invalid code' do
-      subject(:response) { JSON.parse(response.body) }
-      
-      let(:game_key) {  }
+      let(:game_key) { 'game_key' }
       let(:error_response) { 'Invalid code' }
 
-      it { expect(subject['errors']).to eq(error_response) }
+      it { expect(json_response['errors']).to eq(error_response) }
     end
 
     context 'when making a correct guess' do
+      let(:code) { ['a', 'b'] }
+      let(:game_key) { 'sbrubles' }
+      let(:result) { { result: { exact: 8, near: 0 } } }
+      let(:solved) { true }
+
+      it { expect(json_response['result']).to eq(error_response) }
     end
 
     context 'when making an incorrect guess' do
