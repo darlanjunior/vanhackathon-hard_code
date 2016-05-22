@@ -1,13 +1,8 @@
 class Match < ActiveRecord::Base
-  has_many :users
+  has_many :users, dependent: :destroy
+  serialize :code, Array
   
   after_initialize :set_code
-
-  def create name: name
-    self.users = [User.new({name: name})]
-
-    self.create
-  end
 
   def code
     @code ? @code.split('') : nil
@@ -43,12 +38,16 @@ class Match < ActiveRecord::Base
   end
 
   def map_code_to_guess guess 
+    # this is reeeally ugly
+    copy = []
+    guess.each {|g| copy << g}
+
     self.code.each_with_index.map do |code_color, code_index|
       case 
-      when guess[code_index] == code_color
-        guess[code_index] = nil
+      when copy[code_index] == code_color
+        copy[code_index] = nil
         :exact
-      when guess.index(code_color)
+      when copy.index(code_color)
         :near
       else
         :miss

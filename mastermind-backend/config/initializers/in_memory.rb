@@ -1,3 +1,3 @@
-load "#{Rails.root}/db/schema.rb"
+#load "#{Rails.root}/db/schema.rb"
 
 DatabaseCleaner.strategy = :transaction

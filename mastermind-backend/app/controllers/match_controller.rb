@@ -14,27 +14,49 @@ class MatchController < ApplicationController
     render json: { 
       error: {
         code: 404,
-        message: e.exception
+        message: e.exception.to_s
       }
     }, :status => 404
   end
 
   def new_game
-    json, status = response_create_game Match.create(name: game_params)
+    json, status = response_create_game Match.new(users: [User.new(name: game_params)]).tap(&:save)
 
     render json: json, status: status
   end
 
   def join_game
-    @match.add_player game_params
+    user = User.new(name: game_params)
+    user.match = @match
 
-    render json: game_response(@match), status: 200
+    if user.save
+      render json: game_response(@match), status: 200
+    else
+      render json: {error: {code: 400, message: user.errors.messages }}, status: 400
+    end
   end
 
   def guess
-    @user.add_guess @match.match.parse_guess(guess_params)
+    guess = Guess.new(colors: guess_params[:code], exact: 0, near: 0)
+    guess.user = @match.users.where(name: guess_params[:name]).first
+    parsed = @match.parse_guess(guess.colors)
+    guess.exact = parsed[:exact]
+    guess.near = parsed[:near]
 
-    render json: guess_response(@match, @user), status: 200
+    if guess.save 
+      if guess.exact == Match.code_size
+        response = win_game_response @match.code, (Time.now - @match.created_at), guess.user.name
+        
+        @match.destroy
+
+        render json: response, status: 200
+      else
+        render json: guess_response(@match, guess.user, guess), status: 200
+      end
+    else
+      render json: {error: {code: 400, message: guess.errors.messages }}, status: 400
+    end
+
   end
 
   private
@@ -43,7 +65,11 @@ class MatchController < ApplicationController
   end
 
   def guess_params
-    params.require([:name, :guess, :game_key])
+    params.require(:name)
+    params.require(:code)
+    params.require(:game_key)
+
+    params.permit(:name,:game_key, {code: []})
   end
 
   def game_params
@@ -76,16 +102,27 @@ class MatchController < ApplicationController
     }
   end
 
-  def guess_response match, user
+  def guess_response match, user, guess
     {
       colors: Match.colors,
       code_length: Match.code_size,
       game_key: match.id,
-      guess: user.guesses.last.guess,
+      guess: guess.colors,
       num_guesses: user.guesses.count,
       past_results: user.guesses,
-      result: user.guesses.last,
-      solved: match.match.code == user.guesses.last.guess
+      result: guess,
+      solved: (guess.exact == Match.code_size)
+    }
+  end
+
+  def win_game_response code, time, name
+    {
+      code: code,
+      time_taken: time,
+      result: "You win!",
+      solved: true,
+      time_taken: 64.75358,
+      user: name
     }
   end
 

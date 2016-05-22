@@ -1,5 +1,6 @@
 FactoryGirl.define do
   factory :match do
-    code_size 8
+    id 777
+    code ["R","B","G","Y","R","B","G","Y"]
   end
 end

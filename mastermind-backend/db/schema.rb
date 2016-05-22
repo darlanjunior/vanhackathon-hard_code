@@ -11,23 +11,21 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160522024838) do
+ActiveRecord::Schema.define(version: 20160522024309) do
 
   create_table "guesses", force: :cascade do |t|
     t.string   "colors"
     t.integer  "near"
     t.integer  "exact"
+    t.integer  "user_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
 
   create_table "matches", force: :cascade do |t|
-    t.string "code"
-  end
-
-  create_table "matches_to_users", force: :cascade do |t|
-    t.integer "user_id"
-    t.integer "match_id"
+    t.string   "code"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "users", force: :cascade do |t|
@@ -35,11 +33,6 @@ ActiveRecord::Schema.define(version: 20160522024838) do
     t.integer  "match_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-  end
-
-  create_table "users_to_guesses", force: :cascade do |t|
-    t.integer "user_id"
-    t.integer "guess_id"
   end
 
 end
